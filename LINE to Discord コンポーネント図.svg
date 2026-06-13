@@ -1,0 +1,151 @@
+<svg viewBox="0 0 1200 600" xmlns="http://www.w3.org/2000/svg" width="1200" height="600" role="img" font-family="ui-sans-serif, system-ui, 'Segoe UI', 'Hiragino Sans', 'Noto Sans JP', sans-serif">
+  <title>LINE から Discord への連携コンポーネント図</title>
+  <desc>LINEのメッセージ投稿が、LINE API、Google Apps Script とスプレッドシート/Drive、ローカルの Python 処理を経て、Discord チャンネルへ投稿されるまでの左から右への流れ。</desc>
+  <style>
+    svg{
+      --bg-lane:#F6F5F0; --lane-stroke:#D3D1C7;
+      --box:#FFFFFF; --box-stroke:#D3D1C7;
+      --ink:#2C2C2A; --muted:#5F5E5A;
+      --accent:#7F77DD; --accent-soft:#EEEDFE; --accent-ink:#3C3489;
+      --arrow:#888780;
+    }
+    @media (prefers-color-scheme: dark){
+      svg{
+        --bg-lane:#26251f; --lane-stroke:#444441;
+        --box:#211f1c; --box-stroke:#444441;
+        --ink:#F1EFE8; --muted:#B4B2A9;
+        --accent:#AFA9EC; --accent-soft:#26215C; --accent-ink:#CECBF6;
+        --arrow:#888780;
+      }
+    }
+    .lane{ fill:var(--bg-lane); stroke:var(--lane-stroke); }
+    .lane-label{ fill:var(--accent-ink); font-size:14px; font-weight:700; }
+    .box{ fill:var(--box); stroke:var(--box-stroke); stroke-width:1.5; }
+    .box-accent{ fill:var(--accent-soft); stroke:var(--accent); stroke-width:1.5; }
+    .t{ fill:var(--ink); font-size:13.5px; font-weight:700; }
+    .s{ fill:var(--muted); font-size:10.5px; }
+    .flow{ stroke:var(--arrow); stroke-width:2; fill:none; }
+    .flow-dash{ stroke:var(--arrow); stroke-width:2; fill:none; stroke-dasharray:5 4; }
+    .elabel{ fill:var(--muted); font-size:10px; }
+    .head{ fill:var(--ink); font-size:17px; font-weight:700; }
+  </style>
+
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="var(--arrow)"/>
+    </marker>
+  </defs>
+
+  <text x="20" y="28" class="head">LINE → Discord 連携：コンポーネント図（メッセージ投稿 → Discord 投稿）</text>
+
+  <!-- Lanes -->
+  <rect class="lane" x="16"  y="72" width="210" height="496" rx="10"/>
+  <rect class="lane" x="242" y="72" width="300" height="496" rx="10"/>
+  <rect class="lane" x="558" y="72" width="340" height="496" rx="10"/>
+  <rect class="lane" x="914" y="72" width="270" height="496" rx="10"/>
+  <text class="lane-label" x="36"  y="94">① LINE</text>
+  <text class="lane-label" x="262" y="94">② Google（クラウド / GAS）</text>
+  <text class="lane-label" x="578" y="94">③ ローカル（Python）</text>
+  <text class="lane-label" x="934" y="94">④ Discord</text>
+
+  <!-- ===== Arrows (drawn first, under boxes) ===== -->
+  <!-- A1->A2 -->
+  <path class="flow" d="M121,168 L121,210" marker-end="url(#arr)"/>
+  <!-- A2->B1 -->
+  <path class="flow" d="M206,228 C250,200 248,150 282,141" marker-end="url(#arr)"/>
+  <!-- B1->B2 -->
+  <path class="flow" d="M392,168 L392,210" marker-end="url(#arr)"/>
+  <!-- B2->B3 -->
+  <path class="flow" d="M392,268 L392,330" marker-end="url(#arr)"/>
+  <!-- B3->B4 -->
+  <path class="flow" d="M392,388 L392,430" marker-end="url(#arr)"/>
+  <!-- B3->A2 (DownloadFiles.gs が LINE から添付を取得) -->
+  <path class="flow" d="M282,359 C246,360 234,300 206,256" marker-end="url(#arr)"/>
+  <text class="elabel" x="243" y="320" text-anchor="middle">添付取得</text>
+  <!-- B2->C1 (export, dashed) -->
+  <path class="flow-dash" d="M502,228 C560,200 560,150 618,141" marker-end="url(#arr)"/>
+  <text class="elabel" x="556" y="170" text-anchor="middle">TSV出力</text>
+  <!-- C1->C2 -->
+  <path class="flow" d="M728,168 L728,210" marker-end="url(#arr)"/>
+  <!-- C2->C3 -->
+  <path class="flow" d="M728,268 L728,330" marker-end="url(#arr)"/>
+  <!-- C3->C4 -->
+  <path class="flow" d="M728,388 L728,400" marker-end="url(#arr)"/>
+  <!-- B4->C3 (download to cache, dashed) -->
+  <path class="flow-dash" d="M502,452 C560,440 568,392 618,366" marker-end="url(#arr)"/>
+  <text class="elabel" x="556" y="470" text-anchor="middle">DL→キャッシュ</text>
+  <!-- C4 <-> message_pair -->
+  <path class="flow" d="M728,458 L728,486" marker-end="url(#arr)" marker-start="url(#arr)"/>
+  <text class="elabel" x="760" y="476">参照/更新</text>
+  <!-- C4->D1 -->
+  <path class="flow" d="M838,429 L944,429" marker-end="url(#arr)"/>
+  <!-- D1->D2 -->
+  <path class="flow" d="M1049,458 L1049,490" marker-end="url(#arr)"/>
+
+  <!-- ===== Boxes ===== -->
+  <!-- A1 (start, accent) -->
+  <g><rect class="box-accent" x="36" y="110" width="170" height="58" rx="8"/>
+     <text class="t" x="121" y="135" text-anchor="middle">LINEメッセージ</text>
+     <text class="s" x="121" y="153" text-anchor="middle">投稿: 文・画像・ファイル</text></g>
+  <!-- A2 -->
+  <g><rect class="box" x="36" y="210" width="170" height="58" rx="8"/>
+     <text class="t" x="121" y="235" text-anchor="middle">LINE API</text>
+     <text class="s" x="121" y="253" text-anchor="middle">Messaging / Content</text></g>
+
+  <!-- B1 -->
+  <g><rect class="box" x="282" y="110" width="220" height="58" rx="8"/>
+     <text class="t" x="392" y="135" text-anchor="middle">Webhook受信 doPost()</text>
+     <text class="s" x="392" y="153" text-anchor="middle">LINE_message_webhook.gs</text></g>
+  <!-- B2 -->
+  <g><rect class="box" x="282" y="210" width="220" height="58" rx="8"/>
+     <text class="t" x="392" y="235" text-anchor="middle">スプレッドシート</text>
+     <text class="s" x="392" y="253" text-anchor="middle">record_log（生JSON）</text></g>
+  <!-- B3 -->
+  <g><rect class="box" x="282" y="330" width="220" height="58" rx="8"/>
+     <text class="t" x="392" y="355" text-anchor="middle">DownloadFiles.gs</text>
+     <text class="s" x="392" y="373" text-anchor="middle">時間トリガーで取得</text></g>
+  <!-- B4 -->
+  <g><rect class="box" x="282" y="430" width="220" height="58" rx="8"/>
+     <text class="t" x="392" y="455" text-anchor="middle">Google Drive</text>
+     <text class="s" x="392" y="473" text-anchor="middle">添付を保存（名=ID）</text></g>
+
+  <!-- C1 -->
+  <g><rect class="box" x="618" y="110" width="220" height="58" rx="8"/>
+     <text class="t" x="728" y="135" text-anchor="middle">TSV読み込み</text>
+     <text class="s" x="728" y="153" text-anchor="middle">Line record（出力済TSV）</text></g>
+  <!-- C2 -->
+  <g><rect class="box" x="618" y="210" width="220" height="58" rx="8"/>
+     <text class="t" x="728" y="235" text-anchor="middle">グループ分割</text>
+     <text class="s" x="728" y="253" text-anchor="middle">split_by_group.py</text></g>
+  <!-- C3 -->
+  <g><rect class="box" x="618" y="330" width="220" height="58" rx="8"/>
+     <text class="t" x="728" y="355" text-anchor="middle">フェーズ1：抽出</text>
+     <text class="s" x="728" y="373" text-anchor="middle">read_line_tsv.py</text></g>
+  <!-- C4 -->
+  <g><rect class="box" x="618" y="400" width="220" height="58" rx="8"/>
+     <text class="t" x="728" y="425" text-anchor="middle">フェーズ2：送信</text>
+     <text class="s" x="728" y="443" text-anchor="middle">read_line_tsv.py</text></g>
+  <!-- message_pair -->
+  <g><rect class="box" x="653" y="486" width="150" height="46" rx="8"/>
+     <text class="t" x="728" y="508" text-anchor="middle">message_pair</text>
+     <text class="s" x="728" y="524" text-anchor="middle">ID対応表(JSON)</text></g>
+
+  <!-- D1 -->
+  <g><rect class="box" x="944" y="400" width="210" height="58" rx="8"/>
+     <text class="t" x="1049" y="425" text-anchor="middle">Discord Webhook</text>
+     <text class="s" x="1049" y="443" text-anchor="middle">POST送信</text></g>
+  <!-- D2 (end, accent) -->
+  <g><rect class="box-accent" x="944" y="490" width="210" height="58" rx="8"/>
+     <text class="t" x="1049" y="515" text-anchor="middle">Discordチャンネル</text>
+     <text class="s" x="1049" y="533" text-anchor="middle">投稿完了</text></g>
+
+  <!-- Legend -->
+  <g>
+    <rect class="box-accent" x="20" y="576" width="14" height="12" rx="3"/>
+    <text class="s" x="40" y="586">始点/終点</text>
+    <line class="flow" x1="120" y1="582" x2="156" y2="582"/>
+    <text class="s" x="162" y="586">自動処理</text>
+    <line class="flow-dash" x1="240" y1="582" x2="276" y2="582"/>
+    <text class="s" x="282" y="586">手作業（出力/DL）</text>
+  </g>
+</svg>
